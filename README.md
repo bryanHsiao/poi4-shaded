@@ -21,9 +21,19 @@ HCL Domino 的 Java 執行環境會優先從 `jvm\lib\ext`（12.0.x 及更早）
 
 ## 自行建置
 
+需要 Maven 及 Python 3。
+
 ```bash
 mvn clean package
+python patch_xsb.py
 ```
+
+或直接執行 `build.bat`（Windows），它會依序完成上述兩步。
+
+> **為什麼需要 `patch_xsb.py`？**
+> maven-shade-plugin 只 relocate `.class` 檔案，不會處理 XMLBeans 的 `.xsb` 二進位元資料。
+> `.xsb` 檔案內仍保留原始 class name，導致執行時 `NoClassDefFoundError`。
+> 此腳本會掃描 shaded JAR 內所有 `.xsb` 檔案，將未 relocate 的 class name 引用更新為 `poi4shaded.*`。
 
 產出檔案：`target/poi4-shaded-4.1.1.jar`
 

@@ -3,6 +3,8 @@ dependency-reduced-pom.xml
 *.class
 *.jar
 *.log
+*.xls
+*.xlsx
 .idea/
 *.iml
 .DS_Store
