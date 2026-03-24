@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.custom</groupId>
+    <artifactId>poi4-shaded</artifactId>
+    <version>4.1.1</version>
+    <packaging>jar</packaging>
+
+    <name>Apache POI 4.1.1 Shaded (Relocated)</name>
+    <description>
+        將 Apache POI 4.1.1 及其所有傳遞依賴重新打包到 poi4shaded.* 命名空間，
+        以便與全域 classloader 中的 POI 3.x 共存（適用於 HCL Domino 環境）。
+    </description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <poi.version>4.1.1</poi.version>
+        <shade.prefix>poi4shaded</shade.prefix>
+    </properties>
+
+    <dependencies>
+        <!-- ===== Apache POI 4.1.1 全模組 ===== -->
+
+        <!-- POI 核心 (HSSF - .xls, HPSF) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+
+        <!-- POI-OOXML (XSSF - .xlsx, XWPF - .docx, XSLF - .pptx) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+
+        <!-- POI-OOXML-SCHEMAS (完整 OOXML schema 支援) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-schemas</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+
+        <!-- POI-Scratchpad (HWPF, HSLF, HDGF 等舊格式支援) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+
+        <!-- POI-Examples (可選，如不需要可移除) -->
+        <!--
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-examples</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+        -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 產出的 JAR 檔名 -->
+                            <finalName>poi4-shaded-${poi.version}</finalName>
+
+                            <!-- 建立 dependency-reduced POM -->
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+
+                            <!-- 避免產出原始未 shade 的 JAR -->
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+
+                            <!-- ===== Package Relocations ===== -->
+                            <relocations>
+                                <!-- 1. Apache POI 核心 -->
+                                <relocation>
+                                    <pattern>org.apache.poi</pattern>
+                                    <shadedPattern>${shade.prefix}.org.apache.poi</shadedPattern>
+                                </relocation>
+
+                                <!-- 2. XMLBeans (POI 4 的 OOXML 解析核心) -->
+                                <relocation>
+                                    <pattern>org.apache.xmlbeans</pattern>
+                                    <shadedPattern>${shade.prefix}.org.apache.xmlbeans</shadedPattern>
+                                </relocation>
+
+                                <!-- 3. OpenXML Schemas -->
+                                <relocation>
+                                    <pattern>org.openxmlformats.schemas</pattern>
+                                    <shadedPattern>${shade.prefix}.org.openxmlformats.schemas</shadedPattern>
+                                </relocation>
+
+                                <!-- 4. Microsoft Schemas -->
+                                <relocation>
+                                    <pattern>com.microsoft.schemas</pattern>
+                                    <shadedPattern>${shade.prefix}.com.microsoft.schemas</shadedPattern>
+                                </relocation>
+
+                                <!-- 5. SchemaOrg (OOXML 相關) -->
+                                <relocation>
+                                    <pattern>schemaorg_apache_xmlbeans</pattern>
+                                    <shadedPattern>${shade.prefix}.schemaorg_apache_xmlbeans</shadedPattern>
+                                </relocation>
+
+                                <!-- 6. Commons Compress (POI 4 用於 ZIP/壓縮) -->
+                                <relocation>
+                                    <pattern>org.apache.commons.compress</pattern>
+                                    <shadedPattern>${shade.prefix}.org.apache.commons.compress</shadedPattern>
+                                </relocation>
+
+                                <!-- 7. Commons Collections 4 -->
+                                <relocation>
+                                    <pattern>org.apache.commons.collections4</pattern>
+                                    <shadedPattern>${shade.prefix}.org.apache.commons.collections4</shadedPattern>
+                                </relocation>
+
+                                <!-- 8. Commons Codec -->
+                                <relocation>
+                                    <pattern>org.apache.commons.codec</pattern>
+                                    <shadedPattern>${shade.prefix}.org.apache.commons.codec</shadedPattern>
+                                </relocation>
+
+                                <!-- 9. Commons Math 3 -->
+                                <relocation>
+                                    <pattern>org.apache.commons.math3</pattern>
+                                    <shadedPattern>${shade.prefix}.org.apache.commons.math3</shadedPattern>
+                                </relocation>
+
+                                <!-- 10. curvesapi (用於圖表曲線) -->
+                                <relocation>
+                                    <pattern>com.graphbuilder</pattern>
+                                    <shadedPattern>${shade.prefix}.com.graphbuilder</shadedPattern>
+                                </relocation>
+
+                                <!-- 11. ETSI URI Schemas (數位簽章相關) -->
+                                <relocation>
+                                    <pattern>org.etsi.uri</pattern>
+                                    <shadedPattern>${shade.prefix}.org.etsi.uri</shadedPattern>
+                                </relocation>
+
+                                <!-- 12. W3C XML Digital Signature Schemas -->
+                                <relocation>
+                                    <pattern>org.w3.x2006</pattern>
+                                    <shadedPattern>${shade.prefix}.org.w3.x2006</shadedPattern>
+                                </relocation>
+
+                                <!-- 12b. W3C XML Digital Signature (x2000) -->
+                                <relocation>
+                                    <pattern>org.w3.x2000</pattern>
+                                    <shadedPattern>${shade.prefix}.org.w3.x2000</shadedPattern>
+                                </relocation>
+
+                                <!-- 13. Commons Logging (避免與 Domino 環境衝突) -->
+                                <relocation>
+                                    <pattern>org.apache.commons.logging</pattern>
+                                    <shadedPattern>${shade.prefix}.org.apache.commons.logging</shadedPattern>
+                                </relocation>
+                            </relocations>
+
+                            <!-- ===== Filters ===== -->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- 排除簽章檔，避免 SecurityException -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <!-- 排除不需要的 metadata -->
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/NOTICE*</exclude>
+                                        <exclude>META-INF/LICENSE*</exclude>
+                                        <exclude>META-INF/DEPENDENCIES</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+
+                            <!-- ===== Resource Transformers ===== -->
+                            <transformers>
+                                <!-- 合併 META-INF/services 檔案 -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <!-- 自訂 MANIFEST -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Built-By>poi4-shaded</Built-By>
+                                        <Shade-Prefix>${shade.prefix}</Shade-Prefix>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 設定 Java 編譯版本 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
