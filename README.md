@@ -15,15 +15,17 @@ HCL Domino 的 Java 執行環境會優先從 `jvm\lib\ext`（12.0.x 及更早）
 3. `JavaUserClasses` notes.ini 參數指向的 JAR
 4. 以上皆找不到 → `NoClassDefFoundError`
 
-## 使用方式
+## 下載
+
+從 [Releases](https://github.com/bryanHsiao/poi4-shaded/releases) 頁面下載預建的 JAR，放入 Domino 的 `jvm\lib\ext`（或 `ndext`）、NSF 或 `JavaUserClasses` 路徑中即可。
+
+## 自行建置
 
 ```bash
 mvn clean package
 ```
 
 產出檔案：`target/poi4-shaded-4.1.1.jar`
-
-將此 JAR 放入 Domino 的 `jvm\lib\ext`（或 `ndext`）、NSF 或 `JavaUserClasses` 路徑中即可。
 
 ## Relocated Packages
 
