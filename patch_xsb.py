@@ -19,6 +19,13 @@ import os
 
 SHADE_PREFIX = b'poi4shaded.'
 
+# Prefix for schemaorg: must match runtime computation
+# XMLBeans computes: "schema" + className.replace('.','_')
+# = "schema" + "poi4shaded_org_apache_xmlbeans" = "schemapoi4shaded_org_apache_xmlbeans"
+# So the prefix to prepend to "schemaorg_apache_xmlbeans" is "schemapoi4shaded_org_apache_xmlbeans"
+# minus the original "schemaorg_apache_xmlbeans" = we replace the whole thing
+SCHEMAORG_REPLACEMENT = b'schemapoi4shaded_org_apache_xmlbeans'
+
 # Must match the <relocations> in pom.xml
 # Sorted longest-first to avoid partial matches
 RELOCATIONS = sorted([
@@ -26,7 +33,6 @@ RELOCATIONS = sorted([
     b'org.apache.xmlbeans',
     b'org.openxmlformats.schemas',
     b'com.microsoft.schemas',
-    b'schemaorg_apache_xmlbeans',
     b'org.apache.commons.compress',
     b'org.apache.commons.collections4',
     b'org.apache.commons.codec',
@@ -37,6 +43,9 @@ RELOCATIONS = sorted([
     b'org.w3.x2000',
     b'org.apache.commons.logging',
 ], key=len, reverse=True)
+
+# schemaorg pattern - replaced entirely (not just prefixed)
+SCHEMAORG_PATTERN = b'schemaorg_apache_xmlbeans'
 
 
 def patch_xsb_data(data):
@@ -51,12 +60,19 @@ def patch_xsb_data(data):
       2. Prepend 'poi4shaded.' to the string
       3. Update the 2-byte length prefix
     """
+    # Combine all patterns: schemaorg first (longest match priority)
+    # schemaorg uses full replacement; others use prefix
+    all_patterns = [(SCHEMAORG_PATTERN, SCHEMAORG_REPLACEMENT, True)] + \
+                   [(p, SHADE_PREFIX, False) for p in RELOCATIONS]
+    # Sort by pattern length descending to avoid partial matches
+    all_patterns.sort(key=lambda x: len(x[0]), reverse=True)
+
     patches = []  # (offset, old_total_bytes, new_bytes)
 
     i = 0
     while i < len(data):
         matched = False
-        for pattern in RELOCATIONS:
+        for pattern, replacement, is_full_replace in all_patterns:
             plen = len(pattern)
             if data[i:i + plen] == pattern:
                 # Check for writeUTF length prefix (2 bytes before)
@@ -64,7 +80,12 @@ def patch_xsb_data(data):
                     declared_len = struct.unpack('>H', data[i - 2:i])[0]
                     if declared_len >= plen and declared_len < 1000 and (i - 2 + 2 + declared_len) <= len(data):
                         full_str = data[i:i + declared_len]
-                        new_str = SHADE_PREFIX + full_str
+                        if is_full_replace:
+                            # Replace the matched pattern portion, keep the rest
+                            new_str = replacement + full_str[plen:]
+                        else:
+                            # Prepend prefix to the full string
+                            new_str = replacement + full_str
                         new_bytes = struct.pack('>H', len(new_str)) + new_str
                         patches.append((i - 2, 2 + declared_len, new_bytes))
                         i += declared_len
