@@ -112,9 +112,13 @@
                                 </relocation>
 
                                 <!-- 5. SchemaOrg (OOXML 相關) -->
+                                <!-- XMLBeans 在 runtime 會從 class name 計算 metadata path: -->
+                                <!--   "schema" + ClassName.replace('.','_') = "schema" + "poi4shaded_org_apache_xmlbeans" -->
+                                <!--   = "schemapoi4shaded_org_apache_xmlbeans" -->
+                                <!-- 所以 shaded pattern 必須與此計算結果完全一致 -->
                                 <relocation>
                                     <pattern>schemaorg_apache_xmlbeans</pattern>
-                                    <shadedPattern>${shade.prefix}.schemaorg_apache_xmlbeans</shadedPattern>
+                                    <shadedPattern>schema${shade.prefix}_org_apache_xmlbeans</shadedPattern>
                                 </relocation>
 
                                 <!-- 6. Commons Compress (POI 4 用於 ZIP/壓縮) -->
