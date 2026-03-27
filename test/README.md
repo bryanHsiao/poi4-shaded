@@ -49,3 +49,43 @@ Shaded POI 4 (poi4shaded.*)     : PASS
 | Shaded POI 4 | `poi4shaded.org.apache.poi`（來自 `poi4-shaded-4.1.1.jar`） | 建立 `.xlsx` 檔案 |
 
 因為 shaded JAR 的 package name 已改為 `poi4shaded.*`，與 POI 3 的 `org.apache.poi.*` 不同，JVM 會視為完全不同的類別，因此不會衝突。
+
+---
+
+## Domino Java Agent 範例
+
+`DominoAgentExample.java` 示範如何在 HCL Domino 環境中使用 shaded POI 4 讀取文件附件。
+
+### 功能
+
+1. 透過 UNID 取得指定文件
+2. 從 Rich Text 欄位取出附件
+3. 使用 `FileMagic` 自動偵測檔案格式（OLE2 / OOXML）
+4. 根據格式與副檔名分別處理：
+
+| 格式 | 副檔名 | 使用的 Class |
+|---|---|---|
+| OLE2 | `.xls` | `poi4shaded.org.apache.poi.hssf.usermodel.HSSFWorkbook` |
+| OLE2 | `.doc` | `poi4shaded.org.apache.poi.hwpf.HWPFDocument` |
+| OOXML | `.xlsx` | `poi4shaded.org.apache.poi.xssf.usermodel.XSSFWorkbook` |
+| OOXML | `.docx` | `poi4shaded.org.apache.poi.xwpf.usermodel.XWPFDocument` |
+
+### 使用方式
+
+1. 將 `poi4-shaded-4.1.1.jar` 放入 Domino 的 `jvm\lib\ext`（12.0.x 及更早）或 `ndext`（14.0+）
+2. 在 Domino Designer 建立 Java Agent，貼入 `DominoAgentExample.java` 的程式碼
+3. 修改 `UNID` 為目標文件的 UNID
+4. 修改 `FIELD_NAME` 為存放附件的 Rich Text 欄位名稱
+5. 執行 Agent
+
+### import 規則
+
+所有原本 `org.apache.poi.*` 的 import，前面加上 `poi4shaded.` 即可：
+
+```java
+// 原本 POI 4
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+// Shaded POI 4
+import poi4shaded.org.apache.poi.xssf.usermodel.XSSFWorkbook;
+```
